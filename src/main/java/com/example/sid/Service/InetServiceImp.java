@@ -6,7 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.stream.Stream;
 
@@ -31,10 +35,11 @@ public class InetServiceImp implements ICinemaInetService {
     private ProjectionFilmRepository projectionFilmRepository;
     @Autowired
     private TicketRepository ticketRepository;
+
     @Override
     public void initVilles() {
-        Stream.of("Tan-Tan","Casa","agadir","dakhla").forEach(v->{
-            Ville ville=new Ville();
+        Stream.of("Casablanca", "Mohammedia", "Rabat", "Tange").forEach(v -> {
+            Ville ville = new Ville();
             ville.setName(v);
             villeRepository.save(ville);
         });
@@ -42,11 +47,11 @@ public class InetServiceImp implements ICinemaInetService {
 
     @Override
     public void initCinemas() {
-        villeRepository.findAll().forEach(v->{
-            Stream.of("megaraa","Imax","chahrazaf").forEach(cin->{
-                Cinema cinema=new Cinema();
+        villeRepository.findAll().forEach(v -> {
+            Stream.of("megaraa", "Imax", "chahrazaf").forEach(cin -> {
+                Cinema cinema = new Cinema();
                 cinema.setName(cin);
-                cinema.setNbSalle(3+(int)(Math.random()*7));
+                cinema.setNbSalle(3 + (int) (Math.random()) * 7);
                 cinema.setVille(v);
                 cinemaRepository.save(cinema);
             });
@@ -55,46 +60,48 @@ public class InetServiceImp implements ICinemaInetService {
 
     @Override
     public void initSalles() {
-        cinemaRepository.findAll().forEach(v->{
-            Stream.of("sale1","sale2","sale3","sale4").forEach(s->{
-                Salle salle=new Salle();
-                salle.setName(s);
+        cinemaRepository.findAll().forEach(v -> {
+            for (int i = 0; i < v.getNbSalle(); i++) {
+                Salle salle = new Salle();
+                salle.setName("salle" + (i + 1));
                 salle.setCinema(v);
-                salle.setNbPlace((int)Math.random());
-                salle.setCinema(v);
+                salle.setNbPlace(15 + (int) (Math.random() * 20));
                 salleRepository.save(salle);
-            });
+            }
         });
     }
 
     @Override
     public void initPlaces() {
-        salleRepository.findAll().forEach(v->{
-            Stream.of(1,2,3,4,5,6,7).forEach(p->{
-                Place place=new Place();
-                place.setNumero(p);
-                place.setAltitude(Math.random()*7);
-                place.setLatitude(Math.random()*7);
-                place.setLongitude(Math.random()*7);
+        salleRepository.findAll().forEach(v -> {
+            for (int i = 0; i < v.getNbPlace(); i++) {
+                Place place = new Place();
+                place.setNumero(i + 1);
                 place.setSalle(v);
                 placeRepository.save(place);
-            });
+            }
         });
     }
 
     @Override
     public void initSeances() {
-        Stream.of(new Date(),new Date(),new Date()).forEach(date->{
-            Seance seance=new Seance();
-            seance.setHeureDebut(date);
-            seanceReposiory.save(seance);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+        Stream.of("10:30", "11:20", "15:30", "17:00").forEach(date -> {
+            Seance seance = new Seance();
+            try {
+                seance.setHeureDebut(simpleDateFormat.parse(date));
+                seanceReposiory.save(seance);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
         });
     }
 
     @Override
     public void initCategorise() {
-        Stream.of("action","drama","comid").forEach(v->{
-            Categorie categorie=new Categorie();
+        Stream.of("action", "drama", "Histoir", "Fiction").forEach(v -> {
+            Categorie categorie = new Categorie();
             categorie.setName(v);
             categorieRepository.save(categorie);
         });
@@ -102,63 +109,50 @@ public class InetServiceImp implements ICinemaInetService {
 
     @Override
     public void initFilmes() {
-        categorieRepository.findAll().forEach(v->{
-            Stream.of("Ema","the space","star wars","the 100").forEach(t->{
-                Film film=new Film();
-                film.setTitle(t);
-                film.setDure(Math.random()*7);
-                film.setDateSortir(new Date());
-                film.setDescription(t);
-                film.setCategorie(v);
-                filmRepository.save(film);
-            });
+        List<Categorie> categories = categorieRepository.findAll();
+        Stream.of("the Avengers", "spiderman").forEach(t -> {
+            Film film = new Film();
+            film.setTitle(t);
+            film.setDure(Math.random() * 7);
+            film.setDateSortir(new Date());
+            film.setDescription(t);
+            film.setCategorie(categories.get(new Random().nextInt(categories.size())));
+            film.setPhoto(t.trim().replace(" ", ""));
+            filmRepository.save(film);
         });
 
     }
 
     @Override
     public void initProjection() {
-      /*  villeRepository.findAll().forEach(v->{
-            v.getCinemas().forEach(cinema->{
-                cinema.getSalles().forEach(salle -> {
-                    filmRepository.findAll().forEach(film -> {
-                        seanceReposiory.findAll().forEach(seance -> {
-                            ProjectionFilm projectionFilm=new ProjectionFilm();
-                            projectionFilm.setDateProjection(new Date());
-                            projectionFilm.setFilm(film);
-                            projectionFilm.setSalle(salle);
-                            projectionFilm.setSeance(seance);
-                            projectionFilm.setPrix(Math.random()*10);
-                            projectionFilmRepository.save(projectionFilm);
-                        });
+        Long[] a = {Long.valueOf(1), Long.valueOf(2)};
+        villeRepository.findAll().forEach(v -> {
+            v.getCinemas().forEach(c -> {
+                c.getSalles().forEach(s -> {
+                    seanceReposiory.findAll().forEach(se -> {
+                        ProjectionFilm projectionFilm = new ProjectionFilm();
+                        projectionFilm.setDateProjection(new Date());
+                        projectionFilm.setPrix(30);
+                        projectionFilm.setSalle(s);
+                        projectionFilm.setSeance(se);
+                        Film f = filmRepository.findById(Long.valueOf (1+((int)Math.random()*2))).get();
+                        projectionFilm.setFilm(f);
+                        projectionFilmRepository.save(projectionFilm);
                     });
                 });
             });
-        });*/
-        ProjectionFilm projectionFilm=new ProjectionFilm();
-        projectionFilm.setDateProjection(new Date());
-        projectionFilm.setFilm(filmRepository.findAll().get(1));
-        projectionFilm.setSalle(salleRepository.findAll().get(1));
-        projectionFilm.setSeance(seanceReposiory.findAll().get(1));
-        projectionFilm.setPrix(Math.random()*10);
-        projectionFilmRepository.save(projectionFilm);
+        });
     }
 
     @Override
     public void initTicket() {
-        placeRepository.findAll().forEach(place->{
-            projectionFilmRepository.findAll().forEach(pf->{
-                Stream.of("amine","mohamed","khalid","hassan").forEach(nom->{
-                    Ticket ticket=new Ticket();
-                    ticket.setNomClient(nom);
-                    ticket.setCodePayement(new Random().nextInt());
-                    ticket.setPrix(Math.random()*10);
-                    ticket.setProjectionFilm(pf);
-                    ticket.setPlace(place);
-                    ticket.setReservee(true);
-                    ticket.setCodePayement((int)Math.random()*20);
-                    ticketRepository.save(ticket);
-                });
+        projectionFilmRepository.findAll().forEach(p -> {
+            p.getSalle().getPlaces().forEach(place -> {
+                Ticket ticket = new Ticket();
+                ticket.setPlace(place);
+                ticket.setPrix(p.getPrix());
+                ticket.setProjectionFilm(p);
+                ticketRepository.save(ticket);
             });
         });
     }

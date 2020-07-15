@@ -1,5 +1,6 @@
 package com.example.sid.entits;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class Film {
     private String realisateur,description,photo;
     private Date dateSortir;
     @OneToMany(mappedBy = "film")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Collection<ProjectionFilm> projectionFilms;
     @ManyToOne
     private Categorie categorie;
